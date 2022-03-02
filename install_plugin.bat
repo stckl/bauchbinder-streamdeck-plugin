@@ -1,1 +1,1 @@
-xcopy "%~dp0\de.mstoeckle.bauchbinder.sdPlugin\" "%appdata%\Elgato\StreamDeck\Plugins\" /y
+xcopy "%~dp0\de.mstoeckle.bauchbinder.sdPlugin\" "%appdata%\Elgato\StreamDeck\Plugins\de.mstoeckle.bauchbinder.sdPlugin\" /y
