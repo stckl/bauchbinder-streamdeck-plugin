@@ -1,0 +1,41 @@
+{
+  "Actions": [
+    {
+      "Icon": "bauchbinder-icon",
+      "Name": "Bauchbinder action",
+      "States": [
+        {
+          "Image": "bb_gray",
+          "TitleAlignment": "middle",
+          "ShowTitle": true
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Eine Bauchbinde im Bauchbinder anzeigen / ausblenden",
+      "UUID": "de.mstoeckle.bauchbinder.action"
+    }
+  ],
+  "SDKVersion": 2,
+  "Author": "Michael Stoeckle",
+  "CodePath": "index.html",
+  "Description": "Ein wundervolles Plugin um den Bauchbinder fernzusteuern.",
+  "Name": "Bauchbinder",
+  "Icon": "bauchbinder-icon",
+  "URL": "https://github.com/stckl/bauchbinder",
+  "PropertyInspectorPath": "bauchbinder.html",
+  "Version": "0.1",
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.11"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": 
+    {
+        "MinimumVersion" : "4.1"
+    }
+}

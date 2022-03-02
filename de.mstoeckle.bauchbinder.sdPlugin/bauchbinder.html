@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <title>de.mstoeckle.bauchbinder</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <script src="jquery-3.3.1.js"></script>
+    <script src="common.js"></script>
+</head>
+
+<body>
+<div class="sdpi-wrapper">
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Bauchbinde Nummer</div>
+        <input class="sdpi-item-value" id="bauchbindeId">
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Bauchbinder URL</div>
+        <input class="sdpi-item-value" id="bauchbinderUrl">
+    </div>
+    <div class="sdpi-item">
+        <button class="sdpi-item-value" id="updateButton">URL speichern</button>
+    </div>
+</div>
+
+<script>
+    let uuid = "",
+        actionName = "";
+
+    if ($SD) {
+        $SD.on('connected', function (jsonObj) {
+
+            uuid = jsonObj['uuid'];
+            
+            if (jsonObj.hasOwnProperty('actionInfo')) {
+                actionName = jsonObj.actionInfo.action;
+            }
+
+            let settings = $SD.actionInfo.payload.settings;
+
+            if (settings.bauchbinderUrl) {
+                $("#bauchbinderUrl").val(settings.bauchbinderUrl);
+            }
+
+            if (settings.bauchbindeId) {
+                $("#bauchbindeId").val(settings.bauchbindeId);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $("#updateButton").click(function () {
+            // Sending the saved settings to the plugin from property inspector.
+            let bauchbinderUrl = $("#bauchbinderUrl").val();
+            let bauchbindeId = $("#bauchbindeId").val();
+
+            if ($SD && $SD.connection) {
+                let payload = {};
+                payload.bauchbinderUrl = bauchbinderUrl;
+                payload.bauchbindeId = bauchbindeId;
+
+                $SD.api.sendToPlugin(uuid, actionName, payload);
+            }
+        });
+
+        $("#bauchbindeId").change(function () {
+            let bauchbindeId = $("#bauchbindeId").val();
+
+            if ($SD && $SD.connection) {
+                let payload = {};
+                payload.bauchbindeId = bauchbindeId;
+
+                $SD.api.sendToPlugin(uuid, actionName, payload);
+            }
+        });
+    });
+</script>
+
+</body>
+
+</html>

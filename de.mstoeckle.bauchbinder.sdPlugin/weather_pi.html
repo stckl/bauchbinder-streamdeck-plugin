@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <title>de.mstoeckle.bauchbinder</title>
+    <link rel="stylesheet" href="sdpi.css">
+    <script src="jquery-3.3.1.js"></script>
+    <script src="common.js"></script>
+    <script src="countries.js"></script>
+</head>
+
+<body>
+<div class="sdpi-wrapper">
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">AccuWeather API Key</div>
+        <input class="sdpi-item-value" id="apiKey" required>
+    </div>
+    <div class="sdpi-item" id="apiKeyValidationMessage" style="display: none">
+        <details class="message caution">
+            <summary>API is required. Please check the instructions to see how you can obtain it.</summary>
+        </details>
+    </div>
+    <div type="checkbox" class="sdpi-item">
+        <div class="sdpi-item-label">Automatic Refresh </div>
+        <input class="sdpi-item-value" id="automaticRefresh" type="checkbox">
+        <label for="automaticRefresh"><span></span></label>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Type</div>
+        <select class="sdpi-item-value select" id="degreeType">
+            <option value="0">Fahrenheit</option>
+            <option value="1">Celsius</option>
+        </select>
+    </div>
+    <div class="sdpi-item">
+        <div class="sdpi-item-label">Instructions</div>
+        <details class="sdpi-item-value">
+            <p>You can learn more about this plugin and how to obtain an API key by visiting its Github
+                page by <a
+                        href="#"
+                        onclick="openGithub()">clicking here.</a>
+        </details>
+    </div>
+    <div class="sdpi-heading">LOCATION SELECTION</div>
+    <div class="sdpi-item" id="countryCodeContainer">
+        <div class="sdpi-item-label">Country</div>
+        <select class="sdpi-item-value select" id="countryCode">
+        </select>
+    </div>
+    <div class="sdpi-item" id="zipCodeContainer" style="display: none;">
+        <div class="sdpi-item-label">Zip Code</div>
+        <input class="sdpi-item-value" id="zipCode" required>
+    </div>
+    <div class="sdpi-item" id="zipCodeMessage" style="display: none">
+        <details class="message caution">
+            <summary>Zip Code is required and only accepts numeric values!</summary>
+        </details>
+    </div>
+    <div class="sdpi-item" id="cityContainer">
+        <div class="sdpi-item-label">City</div>
+        <input class="sdpi-item-value" id="city" required>
+    </div>
+    <div class="sdpi-item">
+        <button class="sdpi-item-value" id="updateButton">Update</button>
+    </div>
+</div>
+
+<script>
+    let uuid = "",
+        actionName = "";
+
+    if ($SD) {
+        $SD.on('connected', function (jsonObj) {
+            uuid = jsonObj['uuid'];
+            if (jsonObj.hasOwnProperty('actionInfo')) {
+                actionName = jsonObj.actionInfo.action;
+            }
+            let settings = $SD.actionInfo.payload.settings;
+
+            if (settings.apiKey) {
+                $("#apiKey").val(settings.apiKey);
+            }
+
+            if (settings.degreeType) {
+                $("#degreeType option[value=" + settings.degreeType + "]")
+                    .prop("selected", "selected").change();
+            }
+
+            if(settings.automaticRefresh){
+                $("#automaticRefresh").prop("checked",true);
+            }
+
+            if (settings.countryCode) {
+                $('#countryCode option[value=' + settings.countryCode + ']')
+                    .prop('selected', 'selected').change();
+            }
+
+            let isUsSelected = settings.countryCode &&
+                settings.countryCode.toLowerCase() === "us";
+
+            if (isUsSelected && settings.zipCode) {
+                $("#zipCode").val(settings.zipCode);
+            } else if (!isUsSelected && settings.city) {
+                $("#city").val(settings.city);
+            }
+        });
+    }
+
+    function isUSSelected() {
+        let countryCode = $("#countryCode").val();
+        return countryCode.toLowerCase() === "us";
+    }
+
+    $(document).ready(function () {
+
+        $.each(countries, function (index) {
+            $("#countryCode").append($("<option/>")
+                .val(countries[index].code)
+                .text(countries[index].name));
+        });
+
+        $("#apiKey").on("blur", function () {
+            if (!$("#apiKey").val()) {
+                $("#apiKeyValidationMessage").show();
+            } else {
+                $("#apiKeyValidationMessage").hide();
+            }
+        });
+
+        $("#countryCode").on("change", function () {
+
+            if (isUSSelected()) {
+                $("#zipCodeContainer").show();
+
+                $("#cityContainer").hide();
+                $("#cityMessage").hide();
+                $("#zipCodeMessage").hide();
+            } else {
+                $("#cityContainer").show();
+
+                $("#zipCodeContainer").hide();
+                $("#zipCodeMessage").hide();
+                $("#cityMessage").hide();
+            }
+        });
+
+        $("#zipCode").on("blur", function () {
+            if (isUSSelected()) {
+                if (!$("#zipCode").val() || isNaN($("#zipCode").val())) {
+                    $("#zipCodeMessage").show();
+                } else {
+                    $("#zipCodeMessage").hide();
+                }
+            }
+        });
+
+        $("#city").on("blur", function () {
+            if (!isUSSelected()) {
+                if ($("#city").val()) {
+                    $("#cityMessage").hide();
+                } else {
+                    $("#cityMessage").show();
+                }
+            }
+        });
+
+        $("#updateButton").click(function () {
+            // Sending the saved settings to the plugin from property inspector.
+            let apiKey = $("#apiKey").val();
+            let countryCode = $("#countryCode option:selected").val();
+            let zipCode = 0;
+            let city = "";
+            let automaticRefresh = $("#automaticRefresh").prop("checked");
+
+            if (isUSSelected()) {
+                zipCode = $("#zipCode").val();
+                city = "";
+                if (!zipCode || isNaN(zipCode)) {
+                    return;
+                }
+            } else {
+                city = $("#city").val();
+                zipCode = 0;
+                if (!city) {
+                    return;
+                }
+            }
+
+            if (!$("#apiKey").val()) {
+                return;
+            }
+
+            if ($SD && $SD.connection) {
+                let payload = {};
+                payload.automaticRefresh = automaticRefresh;
+                payload.zipCode = zipCode;
+                payload.apiKey = apiKey;
+                payload.city = city;
+                payload.countryCode = countryCode;
+                payload.degreeType = parseInt($("#degreeType option:selected").val());
+
+                $SD.api.sendToPlugin(uuid, actionName, payload);
+            }
+        });
+    });
+
+    function openGithub() {
+        $SD.api.openUrl($SD.actionInfo.context, "https://github.com/stckl/bauchbinder")
+    }
+
+</script>
+
+</body>
+
+</html>
